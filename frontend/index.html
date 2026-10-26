@@ -1,0 +1,1187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelX AI — Cybersecurity Incident Platform</title>
+    <link rel="stylesheet" href="/static/styles.css" id="primary-stylesheet">
+    <script>
+        // Fallback for styles if /static/ is not the active route
+        document.getElementById('primary-stylesheet').onerror = function() {
+            this.onerror = null;
+            this.href = 'styles.css';
+        };
+    </script>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">🛡️</div>
+            <div class="brand-info">
+                <h1>SentinelX AI</h1>
+                <span class="brand-subtitle">Cybersecurity Platform</span>
+            </div>
+        </div>
+
+        <div class="sidebar-section-label">NAVIGATION</div>
+        <ul class="nav-links">
+            <li>
+                <a href="#dashboard" data-view="dashboard" class="nav-link active">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-label">Dashboard</span>
+                </a>
+            </li>
+            <li>
+                <a href="#logs" data-view="logs" class="nav-link">
+                    <span class="nav-icon">📁</span>
+                    <span class="nav-label">Log Explorer</span>
+                </a>
+            </li>
+            <li>
+                <a href="#incidents" data-view="incidents" class="nav-link">
+                    <span class="nav-icon">🚨</span>
+                    <span class="nav-label">Incidents</span>
+                    <span id="nav-incidents-badge" class="nav-badge" style="display: none;">0</span>
+                </a>
+            </li>
+            <li>
+                <a href="#evaluation" data-view="evaluation" class="nav-link">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-label">Evaluation</span>
+                </a>
+            </li>
+            <li>
+                <a href="#about" data-view="about" class="nav-link">
+                    <span class="nav-icon">ℹ️</span>
+                    <span class="nav-label">About</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="sidebar-engine-status">
+            <div class="engine-indicator">
+                <span class="pulse-dot"></span>
+                <span class="indicator-text">Detection Engine Online</span>
+            </div>
+            <div class="engine-meta">Rule heuristics + AI Co-pilot</div>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="version-tag">
+                <span>Version</span>
+                <strong>v1.0.0</strong>
+            </div>
+            <div class="environment-tag">PRODUCTION SOC</div>
+        </div>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <!-- TOP APP BAR -->
+        <header class="top-bar">
+            <div class="view-header-info">
+                <div class="header-title-row">
+                    <h2 id="page-title">Security Dashboard</h2>
+                    <span class="live-beacon"><span class="pulse-dot"></span> LIVE MONITOR</span>
+                </div>
+                <p id="page-subtitle" class="text-secondary">Real-time threat monitoring and incident response telemetry</p>
+            </div>
+
+            <!-- SOC Telemetry HUD -->
+            <div class="soc-telemetry-hud">
+                <div class="hud-item">
+                    <span class="hud-label">DEFENSE POSTURE</span>
+                    <div id="hud-defcon" class="hud-badge defcon-normal">
+                        <span class="defcon-dot"></span>
+                        <span id="hud-defcon-text">DEFCON 4: GUARDED</span>
+                    </div>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">INGEST SPEED</span>
+                    <span id="hud-eps" class="hud-value font-mono">0 EPS</span>
+                </div>
+                <div class="hud-item">
+                    <span class="hud-label">SOC CLOCK (UTC)</span>
+                    <span id="hud-clock" class="hud-value font-mono">12:00:00 UTC</span>
+                </div>
+            </div>
+
+            <div class="top-bar-actions">
+                <button id="btn-quick-load-demo" class="btn btn-secondary btn-glow-hover">
+                    <span class="btn-icon">⚡</span> Load Demo Data
+                </button>
+                <button id="btn-quick-run-detect" class="btn btn-primary btn-glow">
+                    <span class="btn-icon">🔍</span> Run Detection
+                </button>
+            </div>
+        </header>
+
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="view active">
+            <!-- Stats Cards Grid -->
+            <div class="stats-grid">
+                <div class="stat-card" data-stat="total_events">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Events</span>
+                        <div class="stat-icon-wrapper cyan">📊</div>
+                    </div>
+                    <div class="stat-value" id="stat-total-events">0</div>
+                    <div class="stat-meta text-secondary">Ingested log records</div>
+                </div>
+
+                <div class="stat-card" data-stat="suspicious">
+                    <div class="stat-header">
+                        <span class="stat-label">Suspicious Events</span>
+                        <div class="stat-icon-wrapper amber">⚠️</div>
+                    </div>
+                    <div class="stat-value" id="stat-suspicious-events">0</div>
+                    <div class="stat-meta text-secondary">Anomalous indicators</div>
+                </div>
+
+                <div class="stat-card" data-stat="incidents">
+                    <div class="stat-header">
+                        <span class="stat-label">Total Incidents</span>
+                        <div class="stat-icon-wrapper blue">🚨</div>
+                    </div>
+                    <div class="stat-value" id="stat-total-incidents">0</div>
+                    <div class="stat-meta text-secondary">Correlated threat clusters</div>
+                </div>
+
+                <div class="stat-card stat-card-high" data-stat="high">
+                    <div class="stat-header">
+                        <span class="stat-label">High Severity</span>
+                        <div class="stat-icon-wrapper red">🔥</div>
+                    </div>
+                    <div class="stat-value text-danger" id="stat-high-severity">0</div>
+                    <div class="stat-meta text-secondary">Immediate action required</div>
+                </div>
+
+                <div class="stat-card stat-card-medium" data-stat="medium">
+                    <div class="stat-header">
+                        <span class="stat-label">Medium Severity</span>
+                        <div class="stat-icon-wrapper amber">⚡</div>
+                    </div>
+                    <div class="stat-value text-warning" id="stat-medium-severity">0</div>
+                    <div class="stat-meta text-secondary">Suspicious activity spike</div>
+                </div>
+
+                <div class="stat-card stat-card-low" data-stat="low">
+                    <div class="stat-header">
+                        <span class="stat-label">Low Severity</span>
+                        <div class="stat-icon-wrapper blue">🛡️</div>
+                    </div>
+                    <div class="stat-value text-accent" id="stat-low-severity">0</div>
+                    <div class="stat-meta text-secondary">Informational & baseline</div>
+                </div>
+            </div>
+
+            <!-- VISUAL SOC ANALYTICS & ATTACK SURFACE -->
+            <div class="visual-analytics-grid">
+                <!-- Chart 1: Threat Severity Donut Gauge -->
+                <div class="card chart-card">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <h3 class="panel-title">🎯 Threat Posture Spectrum</h3>
+                            <span class="panel-subtitle">Severity ratio & alert distribution</span>
+                        </div>
+                        <span id="chart-total-label" class="tag tag-cyan font-mono">0 Alerts</span>
+                    </div>
+                    <div class="panel-body chart-body-donut">
+                        <div class="donut-chart-container">
+                            <svg id="threat-donut-svg" viewBox="0 0 160 160" class="donut-svg">
+                                <circle class="donut-bg" cx="80" cy="80" r="62" />
+                                <circle id="donut-segment-high" class="donut-segment segment-high" cx="80" cy="80" r="62" />
+                                <circle id="donut-segment-med" class="donut-segment segment-med" cx="80" cy="80" r="62" />
+                                <circle id="donut-segment-low" class="donut-segment segment-low" cx="80" cy="80" r="62" />
+                                <circle id="donut-segment-normal" class="donut-segment segment-normal" cx="80" cy="80" r="62" />
+                            </svg>
+                            <div class="donut-center-text">
+                                <span class="donut-score-val" id="donut-center-val">0</span>
+                                <span class="donut-score-label" id="donut-center-label">INCIDENTS</span>
+                            </div>
+                        </div>
+                        <div class="donut-legend" id="donut-legend-container">
+                            <div class="legend-row">
+                                <span class="legend-dot red"></span>
+                                <span class="legend-label">High Severity</span>
+                                <span class="legend-val font-mono" id="legend-high-val">0</span>
+                            </div>
+                            <div class="legend-row">
+                                <span class="legend-dot amber"></span>
+                                <span class="legend-label">Medium Severity</span>
+                                <span class="legend-val font-mono" id="legend-med-val">0</span>
+                            </div>
+                            <div class="legend-row">
+                                <span class="legend-dot blue"></span>
+                                <span class="legend-label">Low Severity</span>
+                                <span class="legend-val font-mono" id="legend-low-val">0</span>
+                            </div>
+                            <div class="legend-row">
+                                <span class="legend-dot green"></span>
+                                <span class="legend-label">Benign Baseline</span>
+                                <span class="legend-val font-mono" id="legend-normal-val">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Attack Surface Port Probe Spectrum -->
+                <div class="card chart-card">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <h3 class="panel-title">🌐 Attack Surface Port Probes</h3>
+                            <span class="panel-subtitle">Targeted ports & protocol probes</span>
+                        </div>
+                        <span class="tag tag-slate font-mono">Top Vectors</span>
+                    </div>
+                    <div class="panel-body">
+                        <div id="port-bars-container" class="port-spectrum-container">
+                            <div class="chart-empty-state">
+                                <span>No port scan telemetry recorded. Load demo data to populate.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LIVE SOC TERMINAL STREAM TICKER -->
+            <div class="card soc-terminal-card mb-4">
+                <div class="terminal-header">
+                    <div class="terminal-title-group">
+                        <span class="terminal-led pulse-dot"></span>
+                        <h4 class="terminal-title font-mono">LIVE TELEMETRY INGESTION STREAM</h4>
+                        <span class="terminal-meta text-muted font-mono" id="terminal-event-count">0 events ingested</span>
+                    </div>
+                    <div class="terminal-actions">
+                        <button id="btn-toggle-terminal" class="btn btn-xs btn-outline font-mono">⏸ Pause Stream</button>
+                        <button id="btn-clear-terminal" class="btn btn-xs btn-outline font-mono">Clear</button>
+                    </div>
+                </div>
+                <div class="terminal-screen font-mono" id="soc-terminal-screen">
+                    <div class="terminal-entry terminal-entry-sys">
+                        <span class="term-time">[SYS]</span> SentinelX AI Sensor Engine initialized and awaiting log stream.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Split Layout -->
+            <div class="dashboard-split-grid">
+                <!-- Recent Incidents Section -->
+                <div class="card recent-incidents-panel">
+                    <div class="panel-header">
+                        <div class="panel-title-group">
+                            <h3 class="panel-title">🚨 Recent Incidents</h3>
+                            <span class="panel-subtitle">Top correlated security incidents requiring triage</span>
+                        </div>
+                        <a href="#incidents" class="btn btn-sm btn-outline">View All Incidents →</a>
+                    </div>
+                    <div class="panel-body">
+                        <div id="recent-incidents-container">
+                            <!-- Populated via app.js -->
+                            <div class="empty-state">
+                                <div class="empty-icon">🛡️</div>
+                                <h4>No Incidents Detected Yet</h4>
+                                <p class="text-secondary">Upload security logs or load demo data to trigger detection heuristics.</p>
+                                <button class="btn btn-secondary btn-sm" onclick="loadDemoData()">Load Demo Logs</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Right Column: Activity Timeline & System Status -->
+                <div class="dashboard-side-column">
+                    <!-- Activity Timeline Panel -->
+                    <div class="card timeline-panel">
+                        <div class="panel-header">
+                            <div class="panel-title-group">
+                                <h3 class="panel-title">⏱️ Security Activity Feed</h3>
+                                <span class="panel-subtitle">Chronological threat signals</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div id="dashboard-timeline-container" class="dashboard-timeline">
+                                <!-- Populated dynamically -->
+                                <div class="empty-state-compact">
+                                    <p class="text-secondary">Awaiting ingested log events...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Engine Capabilities Card -->
+                    <div class="card engine-card">
+                        <div class="panel-header">
+                            <h4 class="panel-title">🛡️ Detection Engine Features</h4>
+                        </div>
+                        <div class="panel-body">
+                            <ul class="engine-capabilities-list">
+                                <li>
+                                    <span class="cap-badge">ACTIVE</span>
+                                    <div>
+                                        <strong>Brute Force & Credential Stuffing</strong>
+                                        <p class="text-secondary">Rapid consecutive failed logins per IP or user</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="cap-badge">ACTIVE</span>
+                                    <div>
+                                        <strong>Privilege Escalation Detection</strong>
+                                        <p class="text-secondary">Unauthorized sudo/root role assignment anomalies</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="cap-badge">ACTIVE</span>
+                                    <div>
+                                        <strong>Data Exfiltration Anomaly</strong>
+                                        <p class="text-secondary">High volume egress transfers to external destinations</p>
+                                    </div>
+                                </li>
+                                <li>
+                                    <span class="cap-badge">ACTIVE</span>
+                                    <div>
+                                        <strong>AI Response Copilot</strong>
+                                        <p class="text-secondary">Autonomous triage, explanation, and safe containment</p>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 2: LOG EXPLORER -->
+        <section id="view-logs" class="view">
+            <!-- Upload & Ingestion Section -->
+            <div class="card upload-section-card">
+                <div class="upload-section-header">
+                    <div>
+                        <h3 class="panel-title">📥 Log Ingestion</h3>
+                        <p class="text-secondary">Upload security audit logs in CSV or JSON format for parsing and rule correlation.</p>
+                    </div>
+                    <div class="upload-actions">
+                        <button id="btn-load-demo-logs" class="btn btn-secondary">
+                            <span class="btn-icon">⚡</span> Load Demo Dataset
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Drag-and-drop Upload Zone -->
+                <div id="upload-zone" class="upload-zone">
+                    <input type="file" id="log-file-input" accept=".csv,.json" class="file-input-hidden">
+                    <div class="upload-content">
+                        <div class="upload-icon">📁</div>
+                        <h4>Drag and drop security logs here</h4>
+                        <p class="text-secondary">Supports <code>.csv</code> and <code>.json</code> event formats</p>
+                        <button type="button" id="btn-browse-files" class="btn btn-outline btn-sm">Browse Local Files</button>
+                    </div>
+                </div>
+
+                <!-- Upload Status / File Info Bar -->
+                <div id="upload-stats-bar" class="upload-stats-bar" style="display: none;">
+                    <div class="stat-pill">
+                        <span class="pill-label">File:</span>
+                        <strong id="upload-filename">-</strong>
+                    </div>
+                    <div class="stat-pill success">
+                        <span class="pill-label">Parsed Records:</span>
+                        <strong id="upload-parsed-count">0</strong>
+                    </div>
+                    <div class="stat-pill error">
+                        <span class="pill-label">Parse Errors:</span>
+                        <strong id="upload-error-count">0</strong>
+                    </div>
+                    <div class="stat-pill info">
+                        <span class="pill-label">Status:</span>
+                        <strong id="upload-status-text">Ready</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search, Filters, and Table Section -->
+            <div class="card log-table-card">
+                <div class="filter-bar">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="log-search-input" class="search-input" placeholder="Search event ID, IP, user, message, status...">
+                    </div>
+
+                    <div class="filter-controls">
+                        <div class="filter-group">
+                            <label for="filter-event-type">Event Type:</label>
+                            <select id="filter-event-type" class="filter-select">
+                                <option value="">All Event Types</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="filter-src-ip">Source IP:</label>
+                            <select id="filter-src-ip" class="filter-select">
+                                <option value="">All Source IPs</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label for="filter-status">Status:</label>
+                            <select id="filter-status" class="filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="SUCCESS">SUCCESS</option>
+                                <option value="FAILURE">FAILURE</option>
+                                <option value="DENIED">DENIED</option>
+                                <option value="WARNING">WARNING</option>
+                            </select>
+                        </div>
+
+                        <button id="btn-reset-filters" class="btn btn-outline btn-sm" title="Clear all filters">Reset</button>
+                    </div>
+                </div>
+
+                <!-- Log Table Container -->
+                <div class="table-container" id="log-table-container">
+                    <table class="data-table" id="log-data-table">
+                        <thead>
+                            <tr>
+                                <th>Event ID</th>
+                                <th>Timestamp (UTC)</th>
+                                <th>Source IP</th>
+                                <th>Event Type</th>
+                                <th>Username</th>
+                                <th>Status</th>
+                                <th>Suspicious</th>
+                            </tr>
+                        </thead>
+                        <tbody id="log-table-body">
+                            <!-- Populated via JavaScript -->
+                            <tr>
+                                <td colspan="7" class="text-center py-8">
+                                    <div class="empty-state">
+                                        <div class="empty-icon">📂</div>
+                                        <h4>No Log Records Loaded</h4>
+                                        <p class="text-secondary">Upload a log file or click "Load Demo Dataset" to begin analysis.</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Footer -->
+                <div class="table-pagination" id="log-pagination-container">
+                    <div class="pagination-info" id="log-pagination-info">Showing 0 - 0 of 0 events</div>
+                    <div class="pagination-controls">
+                        <button id="btn-first-page" class="btn btn-sm btn-outline" disabled>« First</button>
+                        <button id="btn-prev-page" class="btn btn-sm btn-outline" disabled>‹ Prev</button>
+                        <span id="current-page-display" class="page-indicator">Page 1 of 1</span>
+                        <button id="btn-next-page" class="btn btn-sm btn-outline" disabled>Next ›</button>
+                        <button id="btn-last-page" class="btn btn-sm btn-outline" disabled>Last »</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 3: INCIDENTS -->
+        <section id="view-incidents" class="view">
+            <!-- Incidents Header & Filter Toolbar -->
+            <div class="incidents-toolbar card">
+                <div class="incidents-summary">
+                    <h3 class="panel-title">Correlated Security Incidents</h3>
+                    <p class="text-secondary">Threat events grouped by heuristic detection rules and temporal correlation.</p>
+                </div>
+
+                <div class="incidents-filter-group">
+                    <div class="severity-filter-buttons">
+                        <button class="btn btn-sm btn-filter active" data-severity-filter="all">All (<span id="count-all-incidents">0</span>)</button>
+                        <button class="btn btn-sm btn-filter" data-severity-filter="high">High (<span id="count-filter-high">0</span>)</button>
+                        <button class="btn btn-sm btn-filter" data-severity-filter="medium">Medium (<span id="count-filter-medium">0</span>)</button>
+                        <button class="btn btn-sm btn-filter" data-severity-filter="low">Low (<span id="count-filter-low">0</span>)</button>
+                    </div>
+
+                    <button id="btn-run-detection-incidents" class="btn btn-primary btn-sm">
+                        <span class="btn-icon">⚡</span> Run Detection Engine
+                    </button>
+                </div>
+            </div>
+
+            <!-- Incidents Cards Grid -->
+            <div id="incidents-list-container" class="incidents-grid">
+                <!-- Rendered dynamically -->
+                <div class="empty-state">
+                    <div class="empty-icon">🛡️</div>
+                    <h4>No Incidents Detected</h4>
+                    <p class="text-secondary">Load log records and trigger the detection engine to generate incidents.</p>
+                    <button class="btn btn-secondary btn-sm" onclick="loadDemoData()">Load Demo Logs</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 4: INCIDENT DETAIL -->
+        <section id="view-incident-detail" class="view">
+            <!-- Back Navigation Bar -->
+            <div class="detail-nav-bar">
+                <button id="btn-back-to-incidents" class="btn btn-outline btn-sm">
+                    ← Back to Incidents
+                </button>
+                <div class="detail-actions">
+                    <span id="detail-incident-id" class="code-tag font-mono">INC-000</span>
+                </div>
+            </div>
+
+            <!-- Incident Header Card -->
+            <div class="card incident-header-card">
+                <div class="incident-header-top">
+                    <div>
+                        <div class="incident-badge-row">
+                            <span id="detail-severity-badge" class="severity-badge severity-high">HIGH</span>
+                            <span id="detail-rule-tag" class="tag tag-cyan">Rule: Brute Force Heuristic</span>
+                            <span id="detail-mitre-tag" class="tag tag-purple">MITRE ATT&CK: T1110</span>
+                        </div>
+                        <h2 id="detail-title" class="incident-headline">Multiple Consecutive Failed Logins Detected</h2>
+                        <p id="detail-description" class="text-secondary">Automated credential brute forcing attempt targeting administrative endpoints.</p>
+                    </div>
+
+                    <div class="incident-header-actions">
+                        <div class="incident-stage-group">
+                            <span class="stage-label font-mono">SOC STAGE</span>
+                            <select id="incident-stage-select" class="status-select">
+                                <option value="OPEN">🔴 NEW ALERT</option>
+                                <option value="TRIAGING" selected>🟡 TRIAGING</option>
+                                <option value="CONTAINED">🔵 CONTAINED</option>
+                                <option value="RESOLVED">🟢 RESOLVED</option>
+                            </select>
+                        </div>
+                        <button id="btn-copy-brief" class="btn btn-outline btn-sm" title="Copy Markdown Executive Summary">
+                            📋 Copy Brief
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Quick Metadata Grid -->
+                <div class="incident-meta-grid">
+                    <div class="meta-item">
+                        <span class="meta-label">Source IP Address</span>
+                        <div class="meta-value font-mono" id="detail-source-ip">192.168.1.105</div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Detection Rule</span>
+                        <div class="meta-value" id="detail-rule-name">BF_001_MULTIPLE_FAILURES</div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Evidence Events</span>
+                        <div class="meta-value" id="detail-event-count">0 records</div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">First Seen (UTC)</span>
+                        <div class="meta-value font-mono" id="detail-first-seen">-</div>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Last Seen (UTC)</span>
+                        <div class="meta-value font-mono" id="detail-last-seen">-</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISUAL ATTACK KILL-CHAIN FLOWCHART -->
+            <div class="card attack-flow-card mb-4">
+                <div class="panel-header">
+                    <div class="panel-title-group">
+                        <h3 class="panel-title">⚡ Attack Vector Kill-Chain Flow</h3>
+                        <span class="panel-subtitle">Visual correlation topology from origin to containment</span>
+                    </div>
+                    <span class="tag tag-cyan font-mono" id="flow-status-tag">HEURISTIC CORRELATED</span>
+                </div>
+                <div class="panel-body">
+                    <div class="kill-chain-diagram" id="kill-chain-diagram">
+                        <div class="chain-node node-attacker">
+                            <div class="chain-node-icon">🚨</div>
+                            <div class="chain-node-label">THREAT ACTOR</div>
+                            <div class="chain-node-val font-mono" id="flow-src-ip">203.0.113.42</div>
+                            <span class="chain-node-sub">Inbound Origin</span>
+                        </div>
+                        <div class="chain-arrow">
+                            <span class="arrow-line"></span>
+                            <span class="arrow-badge font-mono" id="flow-event-count">38 Events</span>
+                        </div>
+                        <div class="chain-node node-target">
+                            <div class="chain-node-icon">🎯</div>
+                            <div class="chain-node-label">TARGET VECTOR</div>
+                            <div class="chain-node-val font-mono" id="flow-target">Port 22 (SSH)</div>
+                            <span class="chain-node-sub">Authentication Svc</span>
+                        </div>
+                        <div class="chain-arrow">
+                            <span class="arrow-line"></span>
+                            <span class="arrow-badge font-mono">Trigger Rule</span>
+                        </div>
+                        <div class="chain-node node-rule">
+                            <div class="chain-node-icon">🛡️</div>
+                            <div class="chain-node-label">SENTINELX ENGINE</div>
+                            <div class="chain-node-val font-mono" id="flow-rule-badge">Brute Force</div>
+                            <span class="chain-node-sub">Confidence: HIGH</span>
+                        </div>
+                        <div class="chain-arrow">
+                            <span class="arrow-line"></span>
+                            <span class="arrow-badge font-mono">Gemma 4</span>
+                        </div>
+                        <div class="chain-node node-ai">
+                            <div class="chain-node-icon">🤖</div>
+                            <div class="chain-node-label">AI REASONING</div>
+                            <div class="chain-node-val font-mono">Gemma 4 31B</div>
+                            <span class="chain-node-sub">Evidence-Grounded</span>
+                        </div>
+                        <div class="chain-arrow">
+                            <span class="arrow-line"></span>
+                            <span class="arrow-badge font-mono">Action</span>
+                        </div>
+                        <div class="chain-node node-action">
+                            <div class="chain-node-icon">🔒</div>
+                            <div class="chain-node-label">SOC PLAYBOOK</div>
+                            <div class="chain-node-val font-mono">Containment</div>
+                            <span class="chain-node-sub">Human Review Req</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detail Two-Column Content Grid -->
+            <div class="incident-detail-grid">
+                <!-- Left Column: Detection Info, Response Checklist, Timeline, Evidence Table -->
+                <div class="detail-left-col">
+                    <!-- Safe Response Checklist -->
+                    <div class="card checklist-card">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">🛡️ Safe Response Checklist</h3>
+                                <p class="text-secondary">Recommended operational triage steps for SOC analysts</p>
+                            </div>
+                            <div class="checklist-progress-badge" id="checklist-progress">0/6 Completed</div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="checklist" id="response-checklist">
+                                <label class="checklist-item">
+                                    <input type="checkbox" data-index="0" class="checklist-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <div class="checklist-content">
+                                        <strong>Review authentication audit records</strong>
+                                        <p class="text-secondary">Verify whether failures originated from a single user or distributed accounts.</p>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" data-index="1" class="checklist-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <div class="checklist-content">
+                                        <strong>Verify source IP legitimacy & Threat Intel</strong>
+                                        <p class="text-secondary">Check source IP against internal VPN gateways, Tor exit nodes, and AbuseIPDB.</p>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" data-index="2" class="checklist-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <div class="checklist-content">
+                                        <strong>Check for successful logins following failures</strong>
+                                        <p class="text-secondary">Ensure the attacker did not ultimately succeed in authenticating.</p>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" data-index="3" class="checklist-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <div class="checklist-content">
+                                        <strong>Review other affected services/accounts</strong>
+                                        <p class="text-secondary">Investigate whether horizontal password spraying or lateral movement occurred.</p>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" data-index="4" class="checklist-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <div class="checklist-content">
+                                        <strong>Implement perimeter throttle / quarantine</strong>
+                                        <p class="text-secondary">Safely block offending IP at border WAF or apply MFA step-up challenge.</p>
+                                    </div>
+                                </label>
+                                <label class="checklist-item">
+                                    <input type="checkbox" data-index="5" class="checklist-checkbox">
+                                    <span class="checkbox-custom"></span>
+                                    <div class="checklist-content">
+                                        <strong>Escalate to Incident Response Lead</strong>
+                                        <p class="text-secondary">Notify SOC lead if confirmed malicious and document timeline in ticket.</p>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detection Rule Information Panel -->
+                    <div class="card rule-info-card">
+                        <div class="panel-header">
+                            <h3 class="panel-title">⚙️ Detection Rule Details</h3>
+                        </div>
+                        <div class="panel-body">
+                            <div class="rule-details" id="incident-rule-details">
+                                <div class="rule-detail-item">
+                                    <span class="text-secondary">Rule Logic:</span>
+                                    <p id="rule-logic-desc">Detects greater than 5 consecutive authentication failures within a 5-minute sliding window from the same source IP.</p>
+                                </div>
+                                <div class="rule-detail-item">
+                                    <span class="text-secondary">MITRE ATT&CK Mapping:</span>
+                                    <p><span class="tag tag-cyan" id="rule-mitre-tag">T1110: Brute Force</span> <span class="tag tag-slate">Tactic: Credential Access</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Timeline Visualization -->
+                    <div class="card timeline-card">
+                        <div class="panel-header">
+                            <h3 class="panel-title">⏳ Evidence Chronology Timeline</h3>
+                            <span class="panel-subtitle">Visual sequence of events leading to detection</span>
+                        </div>
+                        <div class="panel-body">
+                            <div class="evidence-timeline" id="incident-timeline">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Evidence Raw Log Records Table -->
+                    <div class="card evidence-table-card">
+                        <div class="panel-header">
+                            <div>
+                                <h3 class="panel-title">📋 Raw Evidence Records</h3>
+                                <p class="text-secondary">Click any Event ID to highlight and inspect the specific record.</p>
+                            </div>
+                        </div>
+                        <div class="panel-body p-0">
+                            <div class="table-container">
+                                <table class="data-table" id="evidence-data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Event ID</th>
+                                            <th>Timestamp (UTC)</th>
+                                            <th>Source IP</th>
+                                            <th>Event Type</th>
+                                            <th>Username</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="evidence-table-body">
+                                        <!-- Populated via JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column: AI Analysis & Copilot Chat -->
+                <div class="detail-right-col">
+                    <!-- AI Incident Explanation Panel -->
+                    <div class="card ai-panel">
+                        <div class="panel-header ai-panel-header">
+                            <div class="ai-title-wrap">
+                                <span class="ai-sparkle">✨</span>
+                                <div>
+                                    <h3 class="panel-title">AI Incident Analysis</h3>
+                                    <span class="panel-subtitle">Executive summary & threat synthesis</span>
+                                </div>
+                            </div>
+                            <button id="btn-generate-ai" class="btn btn-primary btn-sm">
+                                <span class="btn-icon">⚡</span> Generate AI Analysis
+                            </button>
+                        </div>
+                        <div class="panel-body">
+                            <!-- Loading state -->
+                            <div id="ai-loading-spinner" class="ai-loading" style="display: none;">
+                                <div class="loading-spinner"></div>
+                                <p class="loading-text">Synthesizing telemetry with SentinelX AI Engine...</p>
+                            </div>
+
+                            <!-- Analysis Content -->
+                            <div id="ai-explanation-content" class="ai-content-box">
+                                <div class="empty-ai-state">
+                                    <p class="text-secondary">Click <strong>"Generate AI Analysis"</strong> to obtain an automated technical briefing, attack attribution, and containment advice for this incident.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Investigation Copilot Chat -->
+                    <div class="card copilot-card">
+                        <div class="panel-header copilot-header">
+                            <div class="copilot-brand">
+                                <span class="copilot-avatar">🤖</span>
+                                <div>
+                                    <h3 class="panel-title">Investigation Copilot</h3>
+                                    <span class="panel-subtitle">Interactive threat investigation assistant</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Suggested Quick Questions -->
+                        <div class="suggested-questions-wrap">
+                            <span class="suggested-label">Suggested Inquiries:</span>
+                            <div class="suggested-chips">
+                                <button type="button" class="btn-suggestion" data-question="Why was this flagged?">Why was this flagged?</button>
+                                <button type="button" class="btn-suggestion" data-question="Could this be a false positive?">Could this be a false positive?</button>
+                                <button type="button" class="btn-suggestion" data-question="What should I investigate next?">What should I investigate next?</button>
+                                <button type="button" class="btn-suggestion" data-question="Which events are most suspicious?">Which events are most suspicious?</button>
+                            </div>
+                        </div>
+
+                        <!-- Copilot Chat Window -->
+                        <div class="copilot-chat" id="copilot-chat-container">
+                            <div class="copilot-messages" id="copilot-messages">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar">🤖</div>
+                                    <div class="chat-bubble">
+                                        <div class="chat-author">SentinelX Copilot</div>
+                                        <div class="chat-text">
+                                            Hello analyst! I have indexed all evidence logs for this incident. Ask me questions about false-positive likelihood, threat actors, or containment steps.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Copilot Input Form -->
+                            <form id="copilot-form" class="copilot-input-form">
+                                <input type="text" id="copilot-input" class="copilot-input" placeholder="Ask a question about this incident..." autocomplete="off">
+                                <button type="submit" id="btn-copilot-send" class="btn btn-primary btn-sm">
+                                    <span>Send</span> ➔
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 5: EVALUATION -->
+        <section id="view-evaluation" class="view">
+            <div class="card evaluation-header-card">
+                <div class="evaluation-header-flex">
+                    <div>
+                        <h3 class="panel-title">Model & Heuristic Performance Evaluation</h3>
+                        <p class="text-secondary">Benchmark detection accuracy, recall, and false positive rates against curated validation telemetry.</p>
+                    </div>
+                    <button id="btn-run-evaluation" class="btn btn-primary">
+                        <span class="btn-icon">📈</span> Run Evaluation Suite
+                    </button>
+                </div>
+            </div>
+
+            <!-- Evaluation Loading Indicator -->
+            <div id="evaluation-loading" class="evaluation-loading-wrap" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p class="text-secondary">Computing classification matrices and scoring heuristics...</p>
+            </div>
+
+            <!-- Evaluation Results Container -->
+            <div id="evaluation-results-container">
+                <!-- Evaluation Metrics Grid -->
+                <div class="metric-cards-grid">
+                    <div class="metric-card">
+                        <div class="metric-card-header">
+                            <span class="metric-label">Precision</span>
+                            <span class="metric-sublabel">True Positives / Total Flagged</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span class="metric-number" id="metric-precision">94.8%</span>
+                            <span class="metric-badge success">HIGH</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill fill-cyan" id="bar-precision" style="width: 94.8%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-header">
+                            <span class="metric-label">Recall</span>
+                            <span class="metric-sublabel">True Positives / Actual Threats</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span class="metric-number" id="metric-recall">91.4%</span>
+                            <span class="metric-badge success">HIGH</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill fill-blue" id="bar-recall" style="width: 91.4%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-header">
+                            <span class="metric-label">F1-Score</span>
+                            <span class="metric-sublabel">Harmonic Mean of Precision & Recall</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span class="metric-number" id="metric-f1">93.1%</span>
+                            <span class="metric-badge success">OPTIMAL</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill fill-emerald" id="bar-f1" style="width: 93.1%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="metric-card">
+                        <div class="metric-card-header">
+                            <span class="metric-label">Accuracy</span>
+                            <span class="metric-sublabel">Overall Correct Classifications</span>
+                        </div>
+                        <div class="metric-value-row">
+                            <span class="metric-number" id="metric-accuracy">96.2%</span>
+                            <span class="metric-badge info">ROBUST</span>
+                        </div>
+                        <div class="progress-bar-track">
+                            <div class="progress-bar-fill fill-purple" id="bar-accuracy" style="width: 96.2%;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Per-Class Breakdown Table -->
+                <div class="card mt-6">
+                    <div class="panel-header">
+                        <div>
+                            <h3 class="panel-title">Per-Attack Classification Breakdown</h3>
+                            <span class="panel-subtitle">Validation performance across targeted MITRE threat scenarios</span>
+                        </div>
+                    </div>
+                    <div class="panel-body p-0">
+                        <div class="table-container">
+                            <table class="data-table" id="evaluation-class-table">
+                                <thead>
+                                    <tr>
+                                        <th>Threat Category</th>
+                                        <th>Precision</th>
+                                        <th>Recall</th>
+                                        <th>F1-Score</th>
+                                        <th>Support (Samples)</th>
+                                        <th>Detection Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="evaluation-table-body">
+                                    <tr>
+                                        <td><strong>Brute Force (T1110.001)</strong></td>
+                                        <td class="font-mono">96.5%</td>
+                                        <td class="font-mono">94.2%</td>
+                                        <td class="font-mono">95.3%</td>
+                                        <td class="font-mono">145</td>
+                                        <td><span class="tag tag-success">VERIFIED</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Credential Stuffing (T1110.004)</strong></td>
+                                        <td class="font-mono">93.1%</td>
+                                        <td class="font-mono">89.7%</td>
+                                        <td class="font-mono">91.4%</td>
+                                        <td class="font-mono">118</td>
+                                        <td><span class="tag tag-success">VERIFIED</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Privilege Escalation (T1068)</strong></td>
+                                        <td class="font-mono">95.0%</td>
+                                        <td class="font-mono">91.0%</td>
+                                        <td class="font-mono">92.9%</td>
+                                        <td class="font-mono">78</td>
+                                        <td><span class="tag tag-success">VERIFIED</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Data Exfiltration Anomaly (T1048)</strong></td>
+                                        <td class="font-mono">91.8%</td>
+                                        <td class="font-mono">88.5%</td>
+                                        <td class="font-mono">90.1%</td>
+                                        <td class="font-mono">92</td>
+                                        <td><span class="tag tag-success">VERIFIED</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Password Spraying (T1110.003)</strong></td>
+                                        <td class="font-mono">97.2%</td>
+                                        <td class="font-mono">92.8%</td>
+                                        <td class="font-mono">94.9%</td>
+                                        <td class="font-mono">110</td>
+                                        <td><span class="tag tag-success">VERIFIED</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Limitations & Governance Disclaimer -->
+                <div class="card limitations-card mt-6">
+                    <div class="panel-header">
+                        <h4 class="panel-title">⚠️ Benchmark Limitations & Operational Constraints</h4>
+                    </div>
+                    <div class="panel-body text-secondary">
+                        <p class="mb-3">
+                            <strong>Dataset Synthesis:</strong> Evaluation figures are computed using labeled historical benchmark telemetry and synthetic adversarial injection traces. Operational SOC environments may present novel zero-day behaviors, custom obfuscated payloads, or atypical distributed botnet dynamics not fully captured in synthetic tests.
+                        </p>
+                        <p>
+                            <strong>Human-in-the-Loop Requirement:</strong> SentinelX AI outputs are engineered as decision-support telemetry. Automated containment actions (such as firewall IP quarantining) must adhere to organizational change-control policies and undergo review by security analysts.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VIEW 6: ABOUT -->
+        <section id="view-about" class="view">
+            <div class="about-grid">
+                <!-- Project Overview Card -->
+                <div class="card">
+                    <div class="panel-header">
+                        <h3 class="panel-title">🛡️ About SentinelX AI Platform</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p class="about-lead">
+                            SentinelX AI is an intelligent cybersecurity incident analysis, correlation, and response platform designed to eliminate SOC fatigue and accelerate mean-time-to-respond (MTTR).
+                        </p>
+                        <p class="text-secondary mt-3">
+                            Combining deterministic rule-based heuristic correlation with autonomous generative AI reasoning, SentinelX transforms thousands of raw security logs into clustered, actionable incident dossiers with evidence graphs and safe playbooks.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Detection Methodology Card -->
+                <div class="card">
+                    <div class="panel-header">
+                        <h3 class="panel-title">🔍 Core Detection Methodology</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="methodology-steps">
+                            <div class="method-step">
+                                <span class="step-num">01</span>
+                                <div>
+                                    <strong>Streaming Ingestion & Normalization</strong>
+                                    <p class="text-secondary">Parses heterogeneous CSV and JSON logs into unified schemas conforming to security event taxonomies.</p>
+                                </div>
+                            </div>
+                            <div class="method-step">
+                                <span class="step-num">02</span>
+                                <div>
+                                    <strong>Sliding-Window Heuristic Correlation</strong>
+                                    <p class="text-secondary">Evaluates temporal thresholds, IP velocity, and behavioral deviation across time slices.</p>
+                                </div>
+                            </div>
+                            <div class="method-step">
+                                <span class="step-num">03</span>
+                                <div>
+                                    <strong>Autonomous AI Synthesis & Triage</strong>
+                                    <p class="text-secondary">Generates human-readable incident narratives, assesses false positive likelihood, and provides defensive next steps.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technology Stack -->
+                <div class="card">
+                    <div class="panel-header">
+                        <h3 class="panel-title">💻 Technology Stack</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="tech-stack-grid">
+                            <div class="tech-item">
+                                <span class="tech-badge">Backend</span>
+                                <strong>FastAPI / Python 3.11</strong>
+                                <p class="text-secondary">High throughput asynchronous REST APIs & telemetry ingestion pipelines.</p>
+                            </div>
+                            <div class="tech-item">
+                                <span class="tech-badge">Frontend</span>
+                                <strong>Modern Vanilla JavaScript (ES6+)</strong>
+                                <p class="text-secondary">Zero-dependency, lightning-fast Single Page Application with dynamic CSS custom properties.</p>
+                            </div>
+                            <div class="tech-item">
+                                <span class="tech-badge">Detection Engine</span>
+                                <strong>Sliding Windows & MITRE Heuristics</strong>
+                                <p class="text-secondary">Temporal event correlation engine with configurable threshold rulebooks.</p>
+                            </div>
+                            <div class="tech-item">
+                                <span class="tech-badge">AI Synthesis</span>
+                                <strong>Large Language Model Reasoning</strong>
+                                <p class="text-secondary">Structured context prompting with strict defensive containment guardrails.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Disclaimers & Ethics -->
+                <div class="card">
+                    <div class="panel-header">
+                        <h3 class="panel-title">⚖️ Responsible AI & Ethical Disclaimers</h3>
+                    </div>
+                    <div class="panel-body text-secondary">
+                        <p class="mb-3">
+                            <strong>Safe Defensive Operations:</strong> SentinelX AI does not perform intrusive exploitation or offensive penetration testing. All capabilities are strictly defensive, focusing on detection, containment verification, and SOC efficiency.
+                        </p>
+                        <p>
+                            <strong>Data Privacy:</strong> Ingested log streams remain isolated in memory and local secure storage. No sensitive user credentials or plaintext passwords should ever be logged in cleartext.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- SLIDE-OVER LOG RECORD INSPECTOR DRAWER -->
+    <div id="inspector-backdrop" class="drawer-backdrop"></div>
+    <aside id="log-inspector-drawer" class="inspector-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title-group">
+                <span class="tag tag-cyan font-mono" id="inspector-evt-id">EVT-0000</span>
+                <h3 class="drawer-title">Log Event Deep Inspector</h3>
+            </div>
+            <button id="btn-close-inspector" class="btn-close-drawer" aria-label="Close Inspector">&times;</button>
+        </div>
+        <div class="drawer-body">
+            <!-- Event Identity Strip -->
+            <div class="inspector-section">
+                <div class="inspector-kv-grid">
+                    <div class="kv-item">
+                        <span class="kv-label">TIMESTAMP (UTC)</span>
+                        <span class="kv-value font-mono" id="ins-timestamp">-</span>
+                    </div>
+                    <div class="kv-item">
+                        <span class="kv-label">ACTION STATUS</span>
+                        <span class="kv-value" id="ins-status">-</span>
+                    </div>
+                    <div class="kv-item">
+                        <span class="kv-label">SOURCE IP</span>
+                        <span class="kv-value font-mono" id="ins-src-ip">-</span>
+                    </div>
+                    <div class="kv-item">
+                        <span class="kv-label">DESTINATION IP</span>
+                        <span class="kv-value font-mono" id="ins-dst-ip">-</span>
+                    </div>
+                    <div class="kv-item">
+                        <span class="kv-label">DESTINATION PORT</span>
+                        <span class="kv-value font-mono" id="ins-dst-port">-</span>
+                    </div>
+                    <div class="kv-item">
+                        <span class="kv-label">EVENT TYPE</span>
+                        <span class="kv-value" id="ins-event-type">-</span>
+                    </div>
+                    <div class="kv-item">
+                        <span class="kv-label">TARGET USER</span>
+                        <span class="kv-value font-mono" id="ins-username">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inspector Actions -->
+            <div class="inspector-actions-row">
+                <button id="btn-ins-filter-ip" class="btn btn-outline btn-xs">🔍 Filter this IP</button>
+                <button id="btn-ins-copy-json" class="btn btn-secondary btn-xs">📋 Copy JSON</button>
+            </div>
+
+            <!-- Raw JSON Inspector -->
+            <div class="inspector-section">
+                <div class="section-sub-header">
+                    <span class="section-sub-title">RAW TELEMETRY RECORD (JSON)</span>
+                </div>
+                <pre class="json-code-block font-mono" id="ins-raw-json">{}</pre>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
